@@ -71,7 +71,7 @@ class TestRolloutPipeline:
             obs = next_obs
 
         assert total_reward > 0
-        assert step < max_steps or done
+        assert step + 1 == max_steps or done
 
     def test_rollout_trajectory_collection(self):
         """Test that trajectories are correctly collected."""

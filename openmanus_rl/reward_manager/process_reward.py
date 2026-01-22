@@ -150,7 +150,7 @@ class ProcessRewardModel(nn.Module):
 
             # Length penalty
             if i > self.config.length_penalty_threshold:
-                reward += self.config.length_penalty_threshold * -0.01
+                reward += (i - self.config.length_penalty_threshold) * -0.01
 
             step_rewards.append(reward)
 
@@ -390,7 +390,7 @@ class HeuristicProcessRewardModel:
         return score
 
     def _check_progress(
-        self, content: str, step: int, total: int, feedback: List[str], seen_states: set
+        self, content: str, step: int, total: int, feedback: Optional[List[str]], seen_states: set
     ) -> float:
         """Check if making progress."""
         score = 0.0
@@ -406,7 +406,7 @@ class HeuristicProcessRewardModel:
             score += 0.1
 
         # Check if we're in a new state (progress)
-        if feedback and step < len(feedback):
+        if feedback is not None and len(feedback) > step:
             state = feedback[step]
             if state not in seen_states:
                 score += 0.05

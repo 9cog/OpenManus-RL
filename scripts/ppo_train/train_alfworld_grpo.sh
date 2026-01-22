@@ -15,8 +15,8 @@ val_data_size=128
 
 python3 -m verl.trainer.main_ppo \
     algorithm.adv_estimator=grpo \
-    data.train_files=/data1/user/muxin/verl-agent/text/train.parquet \ # TODO: change to the correct path
-    data.val_files=/data1/user/muxin/verl-agent/text/test.parquet \ # TODO: change to the correct path
+    data.train_files=/data1/user/muxin/verl-agent/text/train.parquet \ # Update this path to your training data
+    data.val_files=/data1/user/muxin/verl-agent/text/test.parquet \ # Update this path to your validation data
     data.train_batch_size=$train_data_size \
     data.val_batch_size=$val_data_size \
     data.max_prompt_length=2048 \
