@@ -429,6 +429,7 @@ OpenManus-RL/
 - [Training Process Overview (Chinese)](docs/README_ZH.md)
 - [Training Examples Guide](docs/TRAINING_EXAMPLES_GUIDE.md) ⭐ **NEW**
 - [GRPO Training Guide](docs/GRPO_TRAINING_GUIDE.md) ⭐ **NEW**
+- [DPO/DAPO Training Guide](docs/DPO_TRAINING_GUIDE.md) ⭐ **NEW**
 - [Troubleshooting Guide](docs/TROUBLESHOOTING_GUIDE.md) ⭐ **NEW**
 - [Rollout Guide](docs/ROLLOUT_GUIDE.md)
 - [Evaluation Guide](docs/EVALUATION_GUIDE_EN.md)
