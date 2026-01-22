@@ -293,11 +293,35 @@ Download the OpenManus-RL dataset from [Hugging Face](https://huggingface.co/dat
 
 ### 3. Training Examples
 
-#### ALFWorld RL Training (PPO)
+#### ALFWorld RL Training
+
+**PPO (Proximal Policy Optimization)**
 ```bash
 conda activate openmanus-rl
 bash scripts/ppo_train/train_alfworld.sh
 ```
+
+**GRPO (Group Relative Policy Optimization)**
+```bash
+conda activate openmanus-rl
+bash scripts/ppo_train/train_alfworld_grpo.sh
+```
+
+#### WebShop RL Training
+
+**PPO**
+```bash
+conda activate openmanus-rl
+bash scripts/ppo_train/train_webshop.sh
+```
+
+**GRPO**
+```bash
+conda activate openmanus-rl
+bash scripts/ppo_train/train_webshop_grpo.sh
+```
+
+For detailed GRPO configuration and usage, see the [GRPO Training Guide](docs/GRPO_TRAINING_GUIDE.md).
 
 
 
@@ -403,3 +427,6 @@ OpenManus-RL/
 - [Development Guide (Chinese)](docs/DEVELOPMENT_GUIDE_ZH.md)
 - [Training Process Overview (English)](docs/README.md)
 - [Training Process Overview (Chinese)](docs/README_ZH.md)
+- [GRPO Training Guide](docs/GRPO_TRAINING_GUIDE.md)
+- [Rollout Guide](docs/ROLLOUT_GUIDE.md)
+- [Evaluation Guide](docs/EVALUATION_GUIDE_EN.md)
