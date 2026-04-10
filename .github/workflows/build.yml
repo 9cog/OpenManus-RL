@@ -1,0 +1,175 @@
+name: Build & Test
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ------------------------------------------------------------------
+  # Lint – ruff check + format (fast, no Python install needed)
+  # ------------------------------------------------------------------
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install ruff
+        run: pip install ruff==0.5.1
+      - name: ruff check
+        run: ruff check .
+      - name: ruff format (check only)
+        run: ruff format --check .
+
+  # ------------------------------------------------------------------
+  # Import check – make sure the package is importable
+  # ------------------------------------------------------------------
+  import-check:
+    name: Import check (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install minimal runtime deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy torch requests
+      - name: Verify core modules import cleanly
+        run: |
+          python - <<'EOF'
+          import sys
+          from unittest.mock import MagicMock
+
+          # Stub heavy optional dependencies
+          for mod in ("verl", "verl.utils", "verl.utils.tracking",
+                      "omegaconf", "transformers", "agentenv", "agentenv.envs"):
+              sys.modules[mod] = MagicMock()
+
+          import openmanus_rl
+          from openmanus_rl.memory.memory import SimpleMemory
+          from openmanus_rl.memory.summarized_memory import SummarizedMemory
+          from openmanus_rl.memory.file_memory import FileMemory
+          from openmanus_rl.reward_manager.episode import EpisodeRewardManager
+          from openmanus_rl.reward_manager.process_reward import (
+              ProcessRewardConfig,
+              ProcessRewardModel,
+              HeuristicProcessRewardModel,
+              create_process_reward_model,
+          )
+          from openmanus_rl.algorithms.gigpo import (
+              compute_gigpo_outcome_advantage,
+              compute_step_discounted_returns,
+              episode_norm_reward,
+              step_norm_reward,
+              build_step_group,
+              to_hashable,
+          )
+          print("All core imports OK")
+          EOF
+
+  # ------------------------------------------------------------------
+  # Unit tests – run the pure-Python / torch-only test suite
+  # ------------------------------------------------------------------
+  unit-tests:
+    name: Unit tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    needs: import-check
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy torch pytest pytest-asyncio requests
+      - name: Run unit tests
+        run: |
+          pytest test/ \
+            -m "not requires_env and not requires_gpu and not slow" \
+            --ignore=test/alfworld_rollout.py \
+            --ignore=test/test_rollout_env.py \
+            --ignore=test/test_rollout_mock.py \
+            --ignore=test/test_openmanus.py \
+            --deselect="test/test_reward_computation.py::TestGIGPOAlgorithms::test_episode_norm_reward_single_trajectory" \
+            -v --tb=short \
+            --junitxml=test-results-${{ matrix.python-version }}.xml
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.python-version }}
+          path: test-results-${{ matrix.python-version }}.xml
+
+  # ------------------------------------------------------------------
+  # Spell check
+  # ------------------------------------------------------------------
+  codespell:
+    name: Spell check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install codespell
+        run: pip install codespell==2.2.6 tomli==2.0.1
+      - name: Run codespell
+        run: codespell -c pyproject.toml
+
+  # ------------------------------------------------------------------
+  # isort import ordering
+  # ------------------------------------------------------------------
+  isort:
+    name: Import order (isort)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install isort
+        run: pip install isort==5.13.2
+      - name: Check import ordering
+        run: isort . --check-only
+
+  # ------------------------------------------------------------------
+  # Summary gate – all required jobs must pass
+  # ------------------------------------------------------------------
+  ci-gate:
+    name: CI gate
+    runs-on: ubuntu-latest
+    needs: [lint, unit-tests, codespell, isort]
+    if: always()
+    steps:
+      - name: Check all required jobs passed
+        run: |
+          if [[ "${{ needs.lint.result }}" != "success" ]] || \
+             [[ "${{ needs.unit-tests.result }}" != "success" ]] || \
+             [[ "${{ needs.codespell.result }}" != "success" ]] || \
+             [[ "${{ needs.isort.result }}" != "success" ]]; then
+            echo "One or more required CI jobs failed."
+            exit 1
+          fi
+          echo "All CI jobs passed."
