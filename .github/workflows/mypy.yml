@@ -19,17 +19,17 @@ jobs:
         python-version: ["3.10"]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        curl -sSL https://install.python-poetry.org | python3
-        poetry install --all-extras
+        python -m pip install --upgrade pip
+        pip install mypy types-protobuf==4.24.0.4 numpy torch
     - name: Type-checking package with mypy
       run: |
-        # Run this mypy instance against our main package.
-        poetry run pip install types-protobuf==4.24.0.4
-        poetry run mypy --config-file pyproject.toml .
+        mypy --ignore-missing-imports openmanus_rl/

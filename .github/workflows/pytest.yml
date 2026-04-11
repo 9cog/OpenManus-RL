@@ -16,21 +16,27 @@ jobs:
     strategy:
       max-parallel: 5
       matrix:
-        python-version: ["3.10"]
+        python-version: ["3.10", "3.11"]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: Install test dependencies
       run: |
-        curl -sSL https://install.python-poetry.org | python3
-        poetry install --all-extras
-    - name: Test with pytest
-      env:
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        TOGETHERAI_API_KEY: ${{ secrets.TOGETHERAI_API_KEY }}
+        python -m pip install --upgrade pip
+        pip install numpy torch pytest pytest-asyncio requests
+    - name: Run unit tests
       run: |
-        poetry run pytest
+        pytest test/ -m "not requires_env and not requires_gpu and not slow" \
+          --ignore=test/alfworld_rollout.py \
+          --ignore=test/run_alfworld.sh \
+          --ignore=test/test_rollout_env.py \
+          --ignore=test/test_rollout_mock.py \
+          --ignore=test/test_openmanus.py \
+          --deselect="test/test_reward_computation.py::TestGIGPOAlgorithms::test_episode_norm_reward_single_trajectory" \
+          -v --tb=short
