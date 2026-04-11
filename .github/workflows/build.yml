@@ -17,6 +17,8 @@ jobs:
   lint:
     name: Lint (ruff)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -35,6 +37,8 @@ jobs:
   import-check:
     name: Import check (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
         python-version: ["3.10", "3.11"]
@@ -88,6 +92,8 @@ jobs:
   unit-tests:
     name: Unit tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs: import-check
     strategy:
       fail-fast: false
@@ -128,6 +134,8 @@ jobs:
   codespell:
     name: Spell check
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -144,6 +152,8 @@ jobs:
   isort:
     name: Import order (isort)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -160,6 +170,7 @@ jobs:
   ci-gate:
     name: CI gate
     runs-on: ubuntu-latest
+    permissions: {}
     needs: [lint, unit-tests, codespell, isort]
     if: always()
     steps:

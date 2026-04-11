@@ -64,8 +64,10 @@ def _install_verl_stub() -> None:
 
     verl_mod = MagicMock()
     verl_mod.DataProto = DataProto
-    # Forcibly replace any existing (empty) verl package with our stub so that
-    # sub-imports like `from verl import DataProto` resolve correctly.
+    # Forcibly replace the verl entry in sys.modules.  When the verl directory
+    # exists as a git sub-module (but is not initialised / installed), Python
+    # will have already created a bare module object for it without DataProto.
+    # Using sys.modules["verl"] = ... ensures our stub always wins.
     sys.modules["verl"] = verl_mod
     # Sub-modules referenced by openmanus_rl – register each level explicitly
     # so Python's import machinery can find them via sys.modules lookups.

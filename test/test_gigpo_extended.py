@@ -150,7 +150,7 @@ class TestBuildStepGroupExtended:
 # ============================================================
 
 class TestEpisodeNormRewardExtended:
-    def test_zero_rewards_normalise_to_zero(self):
+    def test_zero_rewards_normalize_to_zero(self):
         rewards = torch.zeros(2, 4)
         mask = torch.ones(2, 4)
         idx = np.array([0, 0])
@@ -206,14 +206,14 @@ class TestStepNormRewardExtended:
         adv = step_norm_reward(rewards, mask, idx)
         assert adv.shape == (3, 5)
 
-    def test_single_sample_per_group_normalises_to_zero(self):
+    def test_single_sample_per_group_normalizes_to_zero(self):
         rewards = torch.tensor([3.0])
         mask = torch.ones(1, 4)
         idx = np.array(["g0"])
         adv = step_norm_reward(rewards, mask, idx)
         assert torch.allclose(adv, torch.zeros(1, 4))
 
-    def test_two_groups_normalised_independently(self):
+    def test_two_groups_normalized_independently(self):
         rewards = torch.tensor([1.0, 5.0, 2.0, 8.0])
         mask = torch.ones(4, 2)
         idx = np.array(["g0", "g0", "g1", "g1"])

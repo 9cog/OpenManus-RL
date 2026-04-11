@@ -216,13 +216,13 @@ class TestSummarizedMemoryFetchWithSummary:
         mem.reset(1)
         mem.store({"text_obs": ["obs"], "action": ["act"]})
 
-        with patch("openmanus_rl.memory.summarized_memory.simple_summarize") as mock_summ:
+        with patch("openmanus_rl.memory.summarized_memory.simple_summarize") as mock_summarize:
             contexts, lengths = mem.fetch(
                 history_length=5,
                 use_summary=True,
                 summary_api_key=None,
             )
-            mock_summ.assert_not_called()
+            mock_summarize.assert_not_called()
         assert lengths[0] == 1
 
     def test_multi_step_calls_summarization(self):
@@ -234,13 +234,13 @@ class TestSummarizedMemoryFetchWithSummary:
         with patch(
             "openmanus_rl.memory.summarized_memory.simple_summarize",
             return_value="SUMMARY",
-        ) as mock_summ:
+        ) as mock_summarize:
             contexts, lengths = mem.fetch(
                 history_length=5,
                 use_summary=True,
                 summary_api_key="fake-key",
             )
-            mock_summ.assert_called_once()
+            mock_summarize.assert_called_once()
         assert contexts[0] == "SUMMARY"
         assert lengths[0] == 3
 
@@ -253,11 +253,11 @@ class TestSummarizedMemoryFetchWithSummary:
         with patch(
             "openmanus_rl.memory.summarized_memory.simple_summarize",
             return_value="CACHED_SUMMARY",
-        ) as mock_summ:
+        ) as mock_summarize:
             mem.fetch(history_length=5, use_summary=True, summary_api_key="k")
             # Second fetch with same steps should use cache
             mem.fetch(history_length=5, use_summary=True, summary_api_key="k")
-            assert mock_summ.call_count == 1  # Called only once
+            assert mock_summarize.call_count == 1  # Called only once
 
     def test_summary_refreshed_after_new_store(self):
         mem = SummarizedMemory()
@@ -268,12 +268,12 @@ class TestSummarizedMemoryFetchWithSummary:
         with patch(
             "openmanus_rl.memory.summarized_memory.simple_summarize",
             return_value="NEW_SUMMARY",
-        ) as mock_summ:
+        ) as mock_summarize:
             mem.fetch(history_length=5, use_summary=True, summary_api_key="k")
             # Add a new record then fetch again – cache should be invalidated
             mem.store({"text_obs": ["new_obs"], "action": ["new_act"]})
             mem.fetch(history_length=5, use_summary=True, summary_api_key="k")
-            assert mock_summ.call_count == 2
+            assert mock_summarize.call_count == 2
 
     def test_extra_kwargs_ignored_gracefully(self):
         """SummarizedMemory.fetch should not raise on unknown kwargs."""

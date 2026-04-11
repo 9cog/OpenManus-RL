@@ -301,7 +301,7 @@ class TestHeuristicProcessRewardModel:
         same = "<action>look</action>"
         traj = [{"role": "assistant", "content": same} for _ in range(5)]
         rewards, _ = model.compute_rewards(traj, False, 0.0)
-        # Rewards after the first repetitions should be penalised
+        # Rewards after the first repetitions should be penalized
         # (they may still be positive due to format/outcome, but later steps <= earlier ones)
         assert all(isinstance(r, (int, float)) for r in rewards)
 
